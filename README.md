@@ -57,7 +57,7 @@ Once developed quick configuration feature I though WHAT IF YOU COULD PROVIDE TO
 ```shell
   ./dist/coeus.js http://this.is.a.host.trust.me 80 --load-configuration attacks.txt
 ```
-The laziest command of all as a shorthand too:
+The laziest command of all has a shorthand too:
 ```shell
   ./dist/coeus.js http://this.is.a.host.trust.me 80 -l attacks.txt
 ```
