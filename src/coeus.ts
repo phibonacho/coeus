@@ -62,13 +62,12 @@ yargs(hideBin(process.argv))
             }
           })
         })
-      } else if(argv.host && argv.port && argv.path && argv['attack-payload']) {
-
-        new AttackConfiguration(argv.method,
+      } else if(argv.host && argv.port && argv.p && argv.a) {
+        new AttackConfiguration(argv.m,
           argv.host,
           argv.port,
-          argv.path,
-          argv['attack-payload'].replace(/&&/, '%26%26'),
+          argv.p,
+          argv.a.replace(/&&/, '%26%26'),
           argv.check)
           .fireAttack();
       } else {

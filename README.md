@@ -2,7 +2,7 @@
 A simple vulnerability scanner wannabe written in node.js
 
 ## Setup and use
-### Building Coeus 1.0.0
+### Building Coeus 1.0.1
 To build Coeus you simply need to clone this repository and launch
 ```shell
   yarn compile
@@ -68,4 +68,4 @@ But as Coeus is pretty touchy, I provided a more polite longhand:
 It works for real, try it! Configuration file must respect quick configuration syntax and provide one configuration per line.
 
 ### NOTES
-Coeus 1.0.0 was tested only for GET method attacks, I don't guarantee anything for POST, PUT, HEAD and DELETE. Try them at your own risk!
+Coeus 1.0.1 was tested only for GET method attacks, I don't guarantee anything for POST, PUT, HEAD and DELETE. Try them at your own risk!
