@@ -1,0 +1,36 @@
+{
+  "author": "phibonachos",
+  "name": "coeus",
+  "description": "A simple vulnerability scanner wannabe written in node.js",
+  "version": "1.0.0",
+  "bin": {
+    "coeus": "src/coeus.ts"
+  },
+  "scripts": {
+    "build": "tsc -p . && chmod u+x dist/coeus.js",
+    "refresh": "rm -rf ./node_modules ./yarn.lock ./dist && yarn compile",
+    "compile" : "yarn install && yarn build",
+    "clean": "rm ./dist/*"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^4.1.1",
+    "clear": "^0.1.0",
+    "commander": "^7.2.0",
+    "path": "^0.12.7",
+    "yargs": "^17.0.1"
+  },
+  "devDependencies": {
+    "@types/clear": "^0.1.1",
+    "@types/node": "^15.0.1",
+    "@types/yargs": "^16.0.1",
+    "axios": "^0.21.1",
+    "fs": "^0.0.1-security",
+    "ora": "^5.4.0",
+    "ts-loader": "^9.1.1",
+    "ts-node": "^9.1.1",
+    "typescript": "^4.2.4",
+    "webpack": "latest",
+    "webpack-cli": "latest"
+  }
+}
