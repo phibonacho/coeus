@@ -76,7 +76,7 @@ export default class Attack {
   }
 
   public toString() {
-    return `[${chalk.bold.bgBlueBright(this.method)} ${this.host}:${this.port}/${chalk.italic.cyan(this.path)} {${this.payload}}]`;
+    return `[${this.method} ${this.host}:${this.port}/${this.path}]:(${this.payload})`;
   }
 
   private generateAttackList() {
@@ -92,20 +92,21 @@ export default class Attack {
   }
 
   private checkAttack(config: Attack, data: any, feedBackProvider: Ora) {
-    if(config.check &&  data.split('\n').some((row: string) => row.match(config.check as RegExp))) {
-      feedBackProvider.succeed(`${config}: ${chalk.bold.greenBright('was effective')}!`);
-      console.log('\n\n');
-    }
-    else if(!config.check) {
-      feedBackProvider.warn(`${config} ended successfully ${chalk.bold.yellow('but no result chek was provided')}`);
-      console.info(`\t attack result: ${chalk.italic.greenBright(data)}\n\n`);
+    if(config.check) {
+      let result = data.split('\n').filter((row: string) => row.match(config.check as RegExp));
+      if(result) {
+        feedBackProvider.succeed(`${config}: ${chalk.bold.greenBright('was effective')}!`);
+        console.info(`\t matching result: ${chalk.italic.greenBright(data)}`);
+      }
+      else {
+        feedBackProvider.fail(`${config}: ${chalk.bold.redBright('wasn\'t effective')}`);
+      }
     }
     else {
-      feedBackProvider.fail(`${config}: ${chalk.bold.redBright('wasn\'t effective')}`);
-      console.log('\n\n');
+      feedBackProvider.warn(`${config} ended successfully ${chalk.bold.yellow('but no result chek was provided')}`);
+      console.info(`\t attack result: ${chalk.italic.greenBright(data)}`);
     }
   }
-
 
   public fireAttack() {
     this.generateAttackList().forEach(config => {
@@ -128,7 +129,6 @@ export default class Attack {
             this.checkAttack(config, response.data, reqSpinner);
           }).catch(error => {
             reqSpinner.fail(`${config} failed: ${error.message}`);
-            console.log('\n\n');
           });
           break;
         default: // GET is default
@@ -141,7 +141,6 @@ export default class Attack {
             this.checkAttack(config, response.data, reqSpinner);
           }).catch(error => {
             reqSpinner.fail(`${config} failed: ${error.message}`);
-            console.log('\n\n');
           });
           break;
       }
