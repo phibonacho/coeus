@@ -3,13 +3,10 @@
 import fs from 'fs';
 import yargs from 'yargs';
 import {hideBin} from 'yargs/helpers';
-import AttackConfiguration from "./AttackConfiguration";
+import Attack, {AttackConfiguration} from "./Attack";
 
-const methodsExpression = '(?<method>(GET|POST|PUT|HEAD|DELETE)(,(GET|POST|PUT|HEAD|DELETE))*)';
-const pathsExpression = '(?<path>[-\\/.\\w]+(,[-\\/.\\w]+)*)';
-const paramsExpression = '(?<params>\\w+=[\\w\\s|&\\-;]+(,\\w+=[\\w\\s|&\\-;]+)*)';
-const checkExpression = '(?<check>.*)';
-const configurationExpression = `^(${methodsExpression}:)?${pathsExpression}:${paramsExpression}(:${checkExpression})?$`;
+const coeus: AttackConfiguration = Attack.configuration;
+const implicitConfigurationPath = `${process.cwd()}/coeus.config.js`;
 
 yargs(hideBin(process.argv))
   .command('scan-fast <host> [port]', 'Scan host with provided attack configurations',
@@ -23,10 +20,20 @@ yargs(hideBin(process.argv))
       default: 8080
     }),
     (argv: any) => {
+      if(argv.setup) {
+        if (fs.existsSync(argv.setup)) {
+          Object.assign(Attack.configuration, require(argv.setup));
+        } else {
+          if(argv.setup !== implicitConfigurationPath)
+            console.error(`using default tool configuration: ${argv.setup} not found.`);
+        }
+      }
+
+      // QUICK INLINE CONFIG OPTION
       if(argv['quick-config']) {
-        let config = argv.q.match(new RegExp(configurationExpression)).groups;
+        let config = argv.q.match(coeus.configurationExpression()).groups;
         if(config) {
-        new AttackConfiguration(
+        new Attack(
           config.method || argv.method,
           argv.host,
           argv.port,
@@ -37,7 +44,9 @@ yargs(hideBin(process.argv))
         else {
           console.error(`Couldn't process quick configuration: ${argv['quick-config']}`)
         }
-      } else if(argv['load-config']) {
+      }
+      // QUICK CONFIG FROM FILE
+      else if(argv['load-config']) {
         fs.readFile(argv['load-config'], 'utf8', (err, data) => {
           if(err) {
             console.error(`Couldn't read configuration from: ${argv['load-config']}: ${err.message}`)
@@ -46,9 +55,9 @@ yargs(hideBin(process.argv))
 
           data.split('\n').forEach(row => {
             if(row) {
-              let config = (row.match(new RegExp(configurationExpression)) || { groups: null }).groups;
+              let config = (row.match(coeus.configurationExpression()) || { groups: null }).groups;
               if(config) {
-                new AttackConfiguration(
+                new Attack(
                   config.method || argv.method,
                   argv.host,
                   argv.port,
@@ -62,8 +71,10 @@ yargs(hideBin(process.argv))
             }
           })
         })
-      } else if(argv.host && argv.port && argv.p && argv.a) {
-        new AttackConfiguration(argv.m,
+      }
+      // FULL OPTION CONFIGURATION
+      else if(argv.host && argv.port && argv.p && argv.a) {
+        new Attack(argv.m,
           argv.host,
           argv.port,
           argv.p,
@@ -79,18 +90,18 @@ yargs(hideBin(process.argv))
     alias: 'm',
     type: 'string',
     describe: 'HTTP method (GET|POST|PUT|HEAD|DELETE)[,GET|POST|PUT|HEAD|DELETE]*',
-    coerce: arg => arg.match(new RegExp(methodsExpression, 'gm')) ? arg.toUpperCase() : undefined,
+    coerce: arg => arg.match(coeus.methodsExpression()) ? arg : undefined,
     default: 'GET'
   }).option('paths', {
   alias: 'p',
   type: 'string',
   describe: 'paths to attack',
-  coerce: arg => arg && arg.match(new RegExp(pathsExpression), 'gm') ? arg.replace(/&&/, '%26%26') : undefined
+  coerce: arg => arg && arg.match(coeus.pathsExpression) ? arg.replace(/&&/, '%26%26') : undefined
 }).option('attack-payloads', {
   alias: 'a',
   type: 'string',
   requiresArg: true,
-  coerce: arg => arg && arg.match(new RegExp(paramsExpression, 'gm')) ? arg.replace(/&&/, '%26%26') : undefined
+  coerce: arg => arg && arg.match(coeus.paramsExpression()) ? arg.replace(/&&/, '%26%26') : undefined
   ,
   describe: 'attack payloads expressed as param=val&param=val(,paramx=valx&param...)*',
 }).option('check', {
@@ -101,9 +112,15 @@ yargs(hideBin(process.argv))
   alias: 'q',
   type: 'string',
   describe: 'quick attack configuration [METHOD:]path:params[:check] (other option will be ignored)',
-  coerce: arg => arg && arg.match(new RegExp(configurationExpression, 'gm')) ? arg : '',
+  coerce: arg => arg && arg.match(coeus.configurationExpression()) ? arg : '',
 }).option('load-config', {
   alias: ['l', 'could-you-please-load-this-file-thanks'],
   type: 'string',
   describe: 'load attack configuration from specified file (other option will be ignored)'
+}).option('setup', {
+  alias: 's',
+  type: 'string',
+  describe: 'load tool configuration from file passed',
+  coerce: (arg: string) => arg.match(/^(\/|\.\/)/) ? arg : `${process.cwd()}/${arg}`,
+  default: implicitConfigurationPath
 }).argv;

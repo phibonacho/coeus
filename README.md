@@ -1,8 +1,7 @@
 # COEUS
 A simple vulnerability scanner wannabe written in node.js
 
-## Setup and use
-### Building Coeus 1.0.1
+## Building Coeus
 To build Coeus you simply need to clone this repository and launch
 ```shell
   yarn compile
@@ -12,8 +11,8 @@ Then you can launch Coeus using
   ./dist/coeus.js <command> <host> [port] [options]
 ```
 
-### Coeus unique and unforgettable command: fast-scan
-Fast-scan is not really that fast, mainly because it is written in javascript (ba-dum-tss).
+## Coeus unique and unforgettable command: scan-fast
+Scan-fast is not really that fast, mainly because it is written in javascript (ba-dum-tss).
 
 However, it supports 3 different attack configuration:
   - 1 attack by full options
@@ -22,7 +21,7 @@ However, it supports 3 different attack configuration:
 
 Were all these necessary? Absolutely not. But I love to suffer, so here we go!
 
-#### Attack by full options
+### Attack by full options
 Attack by full option is the most tiring of all, here and example
 ```shell
   ./dist/coeus.js http://this.is.a.host.trust.me 80 \
@@ -42,7 +41,7 @@ of course you can also use short version
 
 Coeus will launch a scan combining methods, paths and payload list.
 
-#### Attack by quick configuration
+### Attack by quick configuration
 When I noticed full option would take me a lot of time to launch, I wondered why I couldn't use a more terse syntax: (and not because it was suggested in the assignment)
 ```shell
   ./dist/coeus.js http://this.is.a.host.trust.me 80 --quick-configuration [method:]<paths>:<payloads>[:check]
@@ -52,7 +51,7 @@ Of course methods, paths and payloads are comma separated lists. Quick config ha
   ./dist/coeus.js http://this.is.a.host.trust.me 80 -q GET,POST,PUT:path1,path2,path...,param1=val1...:[\w\/]+
 ```
 
-#### Attack by file configuration
+### Attack by file configuration
 Once developed quick configuration feature I though WHAT IF YOU COULD PROVIDE TONS OF QUICK CONFIGURATIONS?
 ```shell
   ./dist/coeus.js http://this.is.a.host.trust.me 80 --load-configuration attacks.txt
@@ -67,5 +66,23 @@ But as Coeus is pretty touchy, I provided a more polite longhand:
 ```
 It works for real, try it! Configuration file must respect quick configuration syntax and provide one configuration per line.
 
-### NOTES
+### Overriding default Tool options
+Proceeding on Coeus development I noticed most of attack's payload includes characters used as separator in configuration.
+In order to prevent this, from Coeus 1.1.0 it is possible to override default attack configuration providing a custom configuration object:
+```js
+// coeus.config.js
+module.exports =  {
+  listDelimiter: ',',
+  tokenDelimiter: ':',
+  methodDefinition: '(GET|POST|PUT|HEAD|DELETE)',
+  pathDefinition: '[-\\/.\\w]+',
+  paramDefinition: "\\w+=[\\w\\s|&\\-;'=%*.#]+",
+  checkDefinition: '(?<check>.*)'
+}
+
+```
+
+Custom tool configuration can be provided by creating a ```coeus.config.js``` file in working directory or passing configuration file using ```setup (-s)``` option.
+
+## NOTES
 Coeus 1.0.1 was tested only for GET method attacks, I don't guarantee anything for POST, PUT, HEAD and DELETE. Try them at your own risk!
