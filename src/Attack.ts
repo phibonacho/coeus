@@ -10,6 +10,7 @@ export abstract class AttackConfiguration {
   pathDefinition: string;
   paramDefinition: string;
   checkDefinition: string;
+  requestHeaders: any;
 
   protected constructor(methodDefinition: string, pathDefinition: string, paramDefinition: string, checkDefinition: string, listDelimiter: string, tokenDelimiter: string) {
     this.listDelimiter = listDelimiter;
@@ -58,12 +59,12 @@ export class BaseConfiguration extends AttackConfiguration {
 }
 
 export default class Attack {
-  private readonly check: RegExp | null;
-  private readonly method: string;
-  private readonly host: string;
-  private readonly path: string;
-  private readonly payload: string;
-  private readonly port: number;
+  protected readonly check: RegExp | null;
+  protected readonly method: string;
+  protected readonly host: string;
+  protected readonly path: string;
+  protected readonly payload: string;
+  protected readonly port: number;
   public static configuration: AttackConfiguration = new BaseConfiguration();
 
   constructor(method: string, host: string, port: number, path: string, payload: string, check: RegExp | null) {
@@ -79,7 +80,7 @@ export default class Attack {
     return `[${this.method} ${this.host}:${this.port}/${this.path}]:(${this.payload})`;
   }
 
-  private generateAttackList() {
+  protected generateAttackList() {
     let result: Attack[] = [];
     this.method.split(Attack.configuration.listDelimiter).forEach(method => {
       this.path.split(Attack.configuration.listDelimiter).forEach(path => {
@@ -94,9 +95,9 @@ export default class Attack {
   private checkAttack(config: Attack, data: any, feedBackProvider: Ora) {
     if(config.check) {
       let result = data.split('\n').filter((row: string) => row.match(config.check as RegExp));
-      if(result) {
+      if(result.length > 0) {
         feedBackProvider.succeed(`${config}: ${chalk.bold.greenBright('was effective')}!`);
-        console.info(`\t matching result: ${chalk.italic.greenBright(data)}`);
+        console.info(`\t matching result: ${chalk.italic.greenBright(result[0])}...`);
       }
       else {
         feedBackProvider.fail(`${config}: ${chalk.bold.redBright('wasn\'t effective')}`);
@@ -116,7 +117,6 @@ export default class Attack {
       }).start();
 
       switch (this.method) {
-        case "POST":
         case "DELETE":
         case "HEAD":
         case "PUT":
@@ -131,12 +131,28 @@ export default class Attack {
             reqSpinner.fail(`${config} failed: ${error.message}`);
           });
           break;
+        case "POST":
+          // post uses data
+          axios({
+            method: "POST",
+            url: config.path,
+            baseURL: `${config.host}:${config.port}`,
+            data: new URLSearchParams(config.payload),
+            headers: Attack.configuration.requestHeaders || {}
+          }).then(response => {
+            this.checkAttack(config, response.data, reqSpinner);
+          }).catch(error => {
+            reqSpinner.fail(`${config} failed: ${error.message}`);
+          });
+          break;
         default: // GET is default
+          // get uses params
           axios({
             method: config.method as Method,
             url: config.path,
             baseURL: `${config.host}:${config.port}`,
-            params: new URLSearchParams(config.payload)
+            params: new URLSearchParams(config.payload),
+            headers: Attack.configuration.requestHeaders || {}
           }).then(response => {
             this.checkAttack(config, response.data, reqSpinner);
           }).catch(error => {
@@ -144,6 +160,6 @@ export default class Attack {
           });
           break;
       }
-    })
+    });
   }
 }
