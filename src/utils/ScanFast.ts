@@ -1,12 +1,11 @@
 import fs from "fs";
 import yargs from "yargs";
-import {basics} from './Builders';
 import Attack, {AttackConfiguration} from "../Attack";
-
+import * as Base from './Builders';
 
 const coeus: AttackConfiguration = Attack.configuration;
 
-export const builder = basics;
+export const builder = Base;
 
 export const handler = (argv: any) => {
   // QUICK INLINE CONFIG OPTION
@@ -33,17 +32,19 @@ export const handler = (argv: any) => {
       }
 
       data.split('\n').forEach((row: string) => {
-        let config = (row.match(coeus.configurationExpression()) || { groups: null }).groups;
-        if (config) {
-          new Attack(
-            config.method || argv.method,
-            argv.host,
-            argv.port,
-            config.path,
-            config.params.replace(/&&/, '%26%26'),
-            config.check ? new RegExp(config.check, 'gm') : null).fireAttack();
-        } else {
-          console.error(`Couldn't process configuration: ${row}`)
+        if(row) {
+          let config = (row.match(coeus.configurationExpression()) || { groups: null }).groups;
+          if (config) {
+            new Attack(
+              config.method || argv.method,
+              argv.host,
+              argv.port,
+              config.path,
+              config.params.replace(/&&/, '%26%26'),
+              config.check ? new RegExp(config.check, 'gm') : null).fireAttack();
+          } else {
+            console.error(`Couldn't process configuration: ${row}`)
+          }
         }
       })
     })

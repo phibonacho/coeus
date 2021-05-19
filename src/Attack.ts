@@ -97,7 +97,7 @@ export default class Attack {
       let result = data.split('\n').filter((row: string) => row.match(config.check as RegExp));
       if(result.length > 0) {
         feedBackProvider.succeed(`${config}: ${chalk.bold.greenBright('was effective')}!`);
-        console.info(`\t matching result: ${chalk.italic.greenBright(result[0])}...`);
+        console.info(`\t matching result: ${chalk.italic.greenBright(result)}...`);
       }
       else {
         feedBackProvider.fail(`${config}: ${chalk.bold.redBright('wasn\'t effective')}`);
@@ -111,10 +111,10 @@ export default class Attack {
 
   public fireAttack() {
     this.generateAttackList().forEach(config => {
-      const reqSpinner: Ora = ora({
+      let reqSpinner: Ora = ora({
         text: `Launching attack: ${config.path} [${config.payload}]`,
         color: 'yellow'
-      }).start();
+      });
 
       switch (this.method) {
         case "DELETE":
@@ -134,7 +134,7 @@ export default class Attack {
         case "POST":
           // post uses data
           axios({
-            method: "POST",
+            method: config.method as Method,
             url: config.path,
             baseURL: `${config.host}:${config.port}`,
             data: new URLSearchParams(config.payload),
