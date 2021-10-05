@@ -25,7 +25,7 @@ yargs(hideBin(process.argv))
 }).option('setup', {
     alias: 's',
     type: 'string',
-    describe: 'load tool sql_injections from file',
+    describe: 'load tool configuration from file',
     coerce: (arg: string) => arg.match(/^(\/|\.\/)/) ? arg : `${process.cwd()}/${arg}`,
     default: implicitConfigurationPath
   }).argv;
